@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Information</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="logo">Admin Panel</div>
+            <nav class="menu">
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="userlist">Users</a></li>
+                    <li><a href="request-list">Requests</a></li>
+                    <li><a href="driverinfo" class="active">Driver Info</a></li>
+                    <li><a href="#">About</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>Driver Information</h1>
+            </header>
+            <div class="content">
+                <div class="table">
+                    <h3>Driver List</h3>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="driver-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col">Full Name</th>
+                                    <th scope="col">Phone Number</th>
+                                    <th scope="col">Address</th>
+                                    <th scope="col">Cab Number</th>
+                                    <th scope="col">Cab Color</th>
+                                    <th scope="col">Cab Brand</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be inserted here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function fetchDrivers() {
+            try {
+                const response = await fetch('http://localhost:5000/api/pendingdrivers'); // Ensure correct endpoint
+                const drivers = await response.json();
+                console.log("Fetched Drivers:", drivers); // Debugging log
+    
+                const tableBody = document.querySelector('#driver-table tbody');
+                tableBody.innerHTML = ''; // Clear previous data
+    
+                drivers.forEach(driver => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${driver.fullname || 'Unknown'}</td>
+                        <td>${driver.number || 'Unknown'}</td>
+                        <td>${driver.address || 'Unknown'}</td>
+                        <td>${driver.cabnumber || 'N/A'}</td>
+                        <td>${driver.cabcolor || 'N/A'}</td>
+                        <td>${driver.cabbrand || 'N/A'}</td>
+                        <td class="text-warning">${driver.status || 'Pending'}</td>
+                        <td>
+                            <button class="approve-btn btn btn-success btn-sm" data-id="${driver._id}">Approve</button>
+                            <button class="decline-btn btn btn-danger btn-sm" data-id="${driver._id}">Decline</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+    
+                // Add event listeners for all approve and decline buttons
+              // Inside the <script> tag in index.ejs
+
+                    document.querySelectorAll('.approve-btn').forEach(button => {
+                        button.addEventListener('click', async (event) => {
+                            const driverId = event.target.getAttribute('data-id');
+                            try {
+                                const response = await fetch(`http://localhost:5000/api/pendingdrivers/${driverId}/approve`, {
+                                    method: 'POST',
+                                });
+                                if (response.ok) {
+                                    alert('Driver approved successfully and moved to user table');
+                                    fetchDrivers(); // Refresh the table
+                                } else {
+                                    const errorData = await response.json();
+                                    alert(`Failed to approve driver: ${errorData.message || 'Unknown error'}`);
+                                }
+                            } catch (error) {
+                                console.error('Error approving driver:', error);
+                                alert('Failed to approve driver');
+                            }
+                        });
+                    });
+    
+                // Inside the <script> tag in index.ejs
+
+                    document.querySelectorAll('.decline-btn').forEach(button => {
+                        button.addEventListener('click', async (event) => {
+                            const driverId = event.target.getAttribute('data-id');
+                            try {
+                                const response = await fetch(`http://localhost:5000/api/pendingdrivers/${driverId}`, { // Use the DELETE route
+                                    method: 'DELETE',
+                                });
+                                if (response.ok) {
+                                    alert('Driver declined successfully.');
+                                    fetchDrivers(); // Refresh the table
+                                } else {
+                                      const errorData = await response.json();
+                                    alert(`Failed to decline driver: ${errorData.message || 'Unknown error'}`);
+                                }
+                            } catch (error) {
+                                console.error('Error declining driver:', error);
+                                alert('Failed to decline driver');
+                            }
+                        });
+                    });
+    
+            } catch (error) {
+                console.error('Error fetching driver data:', error);
+            }
+        }
+    
+        // Function to update driver status (approve or decline)
+        async function updateDriverStatus(driverId, status) {
+            try {
+                const response = await fetch(`http://localhost:5000/api/pendingdrivers/${driverId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+    
+                if (response.ok) {
+                    alert(`Driver ${status} successfully!`);
+                    fetchDrivers(); // Refresh the table
+                } else {
+                    alert(`Failed to ${status} driver`);
+                }
+            } catch (error) {
+                console.error(`Error updating driver status to ${status}:`, error);
+            }
+        }
+    
+        // Load data when the page loads
+        document.addEventListener("DOMContentLoaded", fetchDrivers);
+    </script>
+    
+</body>
+</html>

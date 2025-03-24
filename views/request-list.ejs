@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Request Table</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="logo">Admin Panel</div>
+            <nav class="menu">
+                <ul>
+                    <li><a href="/" >Home</a></li>
+                    <li><a href="userlist">Users</a></li>
+                    <li><a href="request-list">Requests</a></li>
+                    <li><a href="driverinfo" class="active">Driver Info</a></li>
+                    <li><a href="pendingdrivers">Pending Drivers</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>Ride Requests</h1>
+            </header>
+            <div class="content">
+                <div class="table">
+                    <h3>Ride Request List</h3>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="ride-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col">Full Name</th>
+                                    <th scope="col">Phone Number</th>
+                                    <th scope="col">Start Coordinates</th>
+                                    <th scope="col">End Coordinates</th>
+                                    <th scope="col">Distance (km)</th>
+                                    <th scope="col">Duration (min)</th>
+                                    <th scope="col">Cost (PHP)</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Function to fetch ride request data from the API and populate the table
+        async function fetchRides() {
+            try {
+                const response = await fetch('http://localhost:5000/api/requestlist'); // Updated URL
+                const rides = await response.json(); // Parse the JSON response
+
+                const tableBody = document.querySelector('#ride-table tbody');
+                tableBody.innerHTML = ''; // Clear any existing rows
+
+                // Loop through each ride request and create a row in the table
+                rides.forEach(ride => {
+                    const row = document.createElement('tr');
+
+                    // Create each cell and append it to the row
+                    row.innerHTML = `
+                        <td>${ride.fullname}</td>
+                        <td>${ride.number}</td>
+                        <td>Lat: ${ride.coordinates.start.latitude}, Lng: ${ride.coordinates.start.longitude}</td>
+                        <td>Lat: ${ride.coordinates.end.latitude}, Lng: ${ride.coordinates.end.longitude}</td>
+                        <td>${ride.distance.toFixed(2)} km</td>
+                        <td>${(ride.duration * 60).toFixed(2)} min</td>
+                        <td>₱ ${ride.cost.toFixed(2)}</td>
+                        <td>${ride.status.charAt(0).toUpperCase() + ride.status.slice(1)}</td>
+                    `;
+
+                    tableBody.appendChild(row); // Append the row to the table body
+                });
+            } catch (error) {
+                console.error('Error fetching ride requests:', error);
+            }
+        }
+
+        // Call the fetchRides function when the page loads
+        window.onload = fetchRides;
+    </script>
+</body>
+</html>
